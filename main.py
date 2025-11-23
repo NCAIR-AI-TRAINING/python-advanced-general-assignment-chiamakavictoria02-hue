@@ -1,41 +1,57 @@
+# visitor_logger.py
+
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
-VISITOR_FILE = "visitors.txt"
+# --- Custom Exception ---
+class DuplicateVisitorError(Exception):
+    """Raised when the visitor is already the last entry in the file."""
+    pass
 
+# --- Ensure the file exists ---
+def ensure_file(filename="visitors.txt"):
+    """Create the file if it does not exist."""
+    if not os.path.exists(filename):
+        with open(filename, "w") as f:
+            pass
 
-def add_visitor(Alice: ) -> bool:
-    """Adds a visitor to the log while enforcing:
-    1. No duplicate consecutive visitors
-    2. 5-minute wait between different visitors
+# --- Add a visitor ---
+def add_visitor(name, filename="visitors.txt"):
     """
+    Add a visitor with a timestamp.
+    Raises DuplicateVisitorError if the visitor is the same as the last one.
+    """
+    ensure_file(filename)
 
-    now = datetime.now()
+    # Read existing visitors
+    with open(filename, "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
 
-    # Create file if it doesn't exist
-    if not os.path.exists(VISITOR_FILE):
-        with open(VISITOR_FILE, "w") as f:
-            f.write(f"{name},{now.isoformat()}\n")
-        return True
-
-    # Read last entry
-    with open(VISITOR_FILE, "r") as f:
-        lines = f.readlines()
-
+    # Check for consecutive duplicate
     if lines:
-        last_name, last_time_str = lines[-1].strip().split(",")
-        last_time = datetime.fromisoformat(last_time_str)
-
-        # Rule 1 — no duplicate consecutive visitors
+        last_name, _ = lines[-1].split(",", 1)
         if last_name == name:
-            raise ValueError("Duplicate consecutive visitor not allowed")
+            raise DuplicateVisitorError(f"{name} is already the last visitor!")
 
-        # Rule 2 — 5-minute wait
-        if now - last_time < timedelta(minutes=5):
-            raise ValueError("Must wait 5 minutes between visitors")
+    # Add new visitor with timestamp
+    timestamp = datetime.now().isoformat()
+    with open(filename, "a") as f:
+        f.write(f"{name},{timestamp}\n")
 
-    # Passed all checks → add visitor
-    with open(VISITOR_FILE, "a") as f:
-        f.write(f"{name},{now.isoformat()}\n")
+# --- Predefined visitors to add ---
+visitor_names = ["Alice", "Bob", "Charlie", "Alice", "David", "Eve"]
 
-    return True
+print("Adding visitors...\n")
+
+for name in visitor_names:
+    try:
+        add_visitor(name)
+        print(f"Added visitor: {name}")
+    except DuplicateVisitorError as e:
+        print(f"Duplicate detected: {e}")
+
+# Show final contents of visitors.txt
+print("\nFinal contents of visitors.txt:")
+with open("visitors.txt", "r") as f:
+    for line in f:
+        print(line.strip())
