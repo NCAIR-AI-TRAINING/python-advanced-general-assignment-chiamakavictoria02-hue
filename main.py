@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 VISITOR_FILE = "visitors.txt"
 
 
-def add_visitor(name: str) -> bool:
+def add_visitor(Alice: ) -> bool:
     """Adds a visitor to the log while enforcing:
     1. No duplicate consecutive visitors
     2. 5-minute wait between different visitors
